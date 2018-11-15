@@ -1,0 +1,5 @@
+crf_learn -f 3 -c 4.0 ./template/template_L1_1 ../data/train/train_label_L1_data.txt ../model/L1_1_model
+crf_learn -f 3 -c 4.0 ./template/template_L3_1 ../data/train/train_label_L3_data.txt ../model/L1_3_model
+
+crf_test -m ../model/L1_1_model ../data/test/be_tested_label_L1_data.txt > ../data/test/label_L1_tag_data.txt
+crf_test -m ../model/L1_1_model ../data/test/be_tested_label_L3_data.txt > ../data/test/label_L3_tag_data.txt
