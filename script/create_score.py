@@ -6,6 +6,7 @@ import sys
 import os
 import codecs
 import re
+import numpy as np
 
 file_path = r'../data/test/'
 tag_dir_choose = {'L1':'L1tag/', 'L3':'L3tag/'}  #用模型产生的标记文件目录
@@ -48,6 +49,7 @@ def score(file_path, tag_dir_choose, goal_file):
                  file_path+'L3_score.txt')
                  
     return ('L1_score.txt', 'L3_score.txt')
+    # return ('L1_score.txt',)
 
 def L1_score(tag_file, goal_file, score_file):
     '''
@@ -58,10 +60,14 @@ def L1_score(tag_file, goal_file, score_file):
     goal_data = codecs.open(goal_file, 'r', 'utf-8')
     score_data = codecs.open(score_file, 'a', 'utf-8')
 
+    ch_punctuation = u"[？，。‘’：；《》【】『』（）、！～——“”]"
+
     score_data.write('\n================ %s 结果==================\n' % tag_file.split('/')[-1])
     # score 第一行第一列位置存储模型的预测正确的个数，第一行第二列存储模型预测错误的个数
     #       第二行第一列存储模型没有预测到的而实际应该标记的个数
-    score = [[0,0], [0,0]]  
+    # score = [[0,0], [0,0]]
+    score = np.zeros((2,2))
+    w = np.zeros((2,2))
 
     for (tag_line, goal_line) in zip(tag_data, goal_data):  #逐行读取文件并比较标记
         if tag_line == '\n':
@@ -70,26 +76,34 @@ def L1_score(tag_file, goal_file, score_file):
         tag_words = tag_line.strip().split('\t')
         goal_words = goal_line.strip().split('\t')
 
+        if re.search(ch_punctuation, tag_words[0].encode('utf-8').decode('utf-8')):
+            w = np.zeros((2,2))  #是标点处不统计
+            continue
+        else:
+            score = score + w
+        
+        w = np.zeros((2,2))
+
         if tag_words[4] == 'E' or tag_words[4] == 'S':  #只考虑L1划分位置，不比较BMO，因为ES便是标记的划分位置
             if goal_words[3] == 'E' or goal_words[3] == 'S':
-                score[0][0] += 1
+                w[0,0] = 1
             else:
-                score[0][1] += 1
+                w[0,1] = 1
         else:
             if goal_words[3] == 'E' or goal_words[3] == 'S':
-                score[1][0] += 1
+                w[1,0] = 1
             else:
-                score[1][1] += 1
+                w[1,1] = 1
     print(score)
-    precision = score[0][0] /float(score[0][0] + score[0][1])  #计算准确率
-    recall = score[0][0] / float(score[0][0] + score[1][0])  #计算召回率
+    precision = score[0,0] /float(score[0,0] + score[0,1])  #计算准确率
+    recall = score[0,0] / float(score[0,0] + score[1,0])  #计算召回率
     f_score = 2*precision*recall / float(precision+recall)  #计算f-score
 
-    all = score[0][0] + score[1][0]
+    all = score[0,0] + score[1,0]
     score_data.write('总共划分数：' + str(all) + '\n')
-    score_data.write('实验划分正确：' + str(score[0][0]) + '\n')
-    score_data.write('实验划分错误：' + str(score[0][1]) + '\n')
-    score_data.write('遗漏的划分：' + str(score[1][0]) + '\n\n')
+    score_data.write('实验划分正确：' + str(score[0,0]) + '\n')
+    score_data.write('实验划分错误：' + str(score[0,1]) + '\n')
+    score_data.write('遗漏的划分：' + str(score[1,0]) + '\n\n')
     score_data.write('预准率：' + str(precision) + '\n')
     score_data.write('召回率：' + str(recall) + '\n')
     score_data.write('f-score: '+str(f_score)+'\n')
@@ -112,10 +126,13 @@ def L3_score(tag_file, goal_file, score_file):
     goal_data = codecs.open(goal_file, 'r', 'utf-8')
     score_data = codecs.open(score_file, 'a', 'utf-8')
 
+    ch_punctuation = u"[？，。‘’：；《》【】『』（）、！～——“”]"
+
     score_data.write('================ %s 结果==================\n' % tag_file.split('/')[-1])
     # score 第一行第一列位置存储模型的预测正确的个数，第一行第二列存储模型预测错误的个数
     #       第二行第一列存储模型没有预测到的而实际应该标记的个数
-    score = [[0,0], [0,0]]
+    score = np.zeros((2,2))
+    w = np.zeros((2,2))
 
     for (tag_line, goal_line) in zip(tag_data, goal_data):  #逐行读取文件并比较标记
         if tag_line == '\n':
@@ -124,26 +141,34 @@ def L3_score(tag_file, goal_file, score_file):
         tag_words = tag_line.strip().split('\t')
         goal_words = goal_line.strip().split('\t')
 
+        if re.search(ch_punctuation, tag_words[0].encode('utf-8').decode('utf-8')):
+            w = np.zeros((2, 2))
+            continue  #不比较标点符号
+        else:
+            score = score + w
+
+        w = np.zeros((2, 2))
+
         if tag_words[5] == 'E' or tag_words[5] == 'S':  #只考虑L1划分位置，不比较BMO，因为ES便是标记的划分位置
             if goal_words[4] == 'E' or goal_words[4] == 'S':
-                score[0][0] += 1
+                w[0,0] = 1
             else:
-                score[0][1] += 1
+                w[0,1] = 1
         else:
             if goal_words[4] == 'E' or goal_words[4] == 'S':
-                score[1][0] += 1
+                w[1,0] = 1
             else:
-                score[1][1] += 1
-    print(score)
-    precision = score[0][0] /float(score[0][0] + score[0][1])  #计算准确率
-    recall = score[0][0] / float(score[0][0] + score[1][0])  #计算召回率
+                w[1,1] = 1
+    # print(score)
+    precision = score[0,0] /float(score[0,0] + score[0,1])  #计算准确率
+    recall = score[0,0] / float(score[0,0] + score[1,0])  #计算召回率
     f_score = 2*precision*recall / float(precision+recall)  #计算f-score
 
-    all = score[0][0] + score[1][0]
+    all = score[0,0] + score[1,0]
     score_data.write('总共划分数：' + str(all) + '\n')
-    score_data.write('实验划分正确：' + str(score[0][0]) + '\n')
-    score_data.write('实验划分错误：' + str(score[0][1]) + '\n')
-    score_data.write('遗漏的划分：' + str(score[1][0]) + '\n\n')
+    score_data.write('实验划分正确：' + str(score[0,0]) + '\n')
+    score_data.write('实验划分错误：' + str(score[0,1]) + '\n')
+    score_data.write('遗漏的划分：' + str(score[1,0]) + '\n\n')
     score_data.write('预准率：' + str(precision) + '\n')
     score_data.write('召回率：' + str(recall) + '\n')
     score_data.write('f-score: '+str(f_score)+'\n')
