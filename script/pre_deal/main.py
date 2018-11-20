@@ -25,14 +25,15 @@ for file in sentence_files:
     seg_files.append(t)
 
 
+# 生成训练文件
 name = os.path.split(raw_files[0])[1]
-make_crf_train_data.make_crf_train_label_L1_data(seg_files[0], raw_files[0], train_path + 'L1-' + name)
-make_crf_train_data.make_crf_train_label_L2_data(seg_files[0], raw_files[0], train_path + 'L2-' + name)
-make_crf_train_data.make_crf_train_label_L3_data(seg_files[0], raw_files[0], train_path + 'L3-' + name)
+make_crf_train_data.make_crf_train_label_L1_data(seg_files[0], raw_files[0], train_path + 'L1-' + name, True)
+make_crf_train_data.make_crf_train_label_L2_data(seg_files[0], raw_files[0], train_path + 'L2-' + name, True)
+make_crf_train_data.make_crf_train_label_L3_data(seg_files[0], raw_files[0], train_path + 'L3-' + name, True)
 
-make_crf_train_data.make_crf_train_label_L2_data(seg_files[1], raw_files[1], test_path + 'L2_goal.txt')
-make_crf_train_data.make_crf_train_label_L3_data(seg_files[1], raw_files[1], test_path + 'L3_goal.txt')
+# 生成测试目标文件
+make_crf_train_data.make_crf_train_label_L2_data(seg_files[1], raw_files[1], test_path + 'L2_goal.txt', True)
+make_crf_train_data.make_crf_train_label_L3_data(seg_files[1], raw_files[1], test_path + 'L3_goal.txt', True)
 
-
-make_crf_test_data.make_crf_tested_label_L1_data(sentence_files[1], test_path + 'L1_test.txt')
-make_crf_test_data.make_crf_tested_label_L3_data(sentence_files[1], test_path + 'L2_or_L3_test.txt')
+# 生成测试文件
+make_crf_test_data.make_test_data(sentence_files[1], test_path + 'test.txt')
